@@ -32,13 +32,6 @@ boolconfirmo = False
 boolrecuso = False
 
 
-def thread_fun():
-   ret, frameteste = cam.read() 
-   imagem = cv2.cvtColor(frameteste, cv2.COLOR_BGR2RGB)  
-   imagem = Image.fromarray(imagem)
-   tkimage = ImageTk.PhotoImage(imagem)
-   l1.config(image=tkimage)
-
 def boolfoto():
     global boolfoto
     boolfoto = not boolfoto
@@ -53,7 +46,6 @@ def boolrecuso():
 
 def cali():
     cam = cv2.VideoCapture(0)
-    cv2.namedWindow("fotos")
     contador = 0
     global boolfoto
     global boolrecuso
@@ -63,18 +55,20 @@ def cali():
     boolconfirmo = False
     
     while True:
-        thread_fun()
         ret, frame = cam.read()
         salvo = frame
         if ret == False:
             print("problema na camera")
             break
-        cv2.imshow("fotos", frame)
         tamanho = (frame.shape[0],frame.shape[1])
         k = cv2.waitKey(1)
+
         if k%256 == 27:
             # ESC pressed
             break
+        feed = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) 
+        img_update = ImageTk.PhotoImage(Image.fromarray(feed))
+        l1.configure(image=img_update)
         menu.update()
         if boolfoto  == True:
             # SPACE pressed
@@ -109,7 +103,6 @@ def cali():
                     menu.update()
         if boolconfirmo == True:
             break
-    cv2.destroyWindow('fotos')
     objp = np.zeros((tamanhoTabuleiro[0] * tamanhoTabuleiro[1], 3), np.float32)
     objp[:,:2] = np.mgrid[0:tamanhoTabuleiro[0],0:tamanhoTabuleiro[1]].T.reshape(-1,2)
     objetoReal = [] #points in real world space

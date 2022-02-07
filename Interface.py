@@ -47,14 +47,6 @@ boolfoto = False
 boolconfirmo = False
 boolrecuso = False
 
-def boolCamera1():
-    global boolc1
-    boolc1 = not boolc1
-
-def boolCamera2():
-    global boolc2
-    boolc2 = not boolc2
-
 def boolfotoc():
     global boolfoto
     boolfoto = not boolfoto
@@ -189,14 +181,14 @@ def creattreco():
     l1.place(x = 70, y = 150)
     menu2.update()
     
-    cv2.namedWindow("fotos")
     contador = 0
-    #threading.Thread(target=thread_fun(l1)).start()
+
     while True:
-        
+        feed = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) 
+        img_update = ImageTk.PhotoImage(Image.fromarray(feed))
+        l1.configure(image=img_update)
         menu2.update()
         if boolrecuso == True:
-            cv2.destroyWindow("fotos")
             menu2.destroy()
             menu.deiconify()
             boolfoto = False
@@ -208,7 +200,6 @@ def creattreco():
         if ret == False:
             print("problema na camera")
             break
-        cv2.imshow("fotos", frame)
         tamanho = (frame.shape[0],frame.shape[1])
         #k = cv2.waitKey(1)
         #if k%256 == 27:
@@ -247,7 +238,6 @@ def creattreco():
                     menu2.update()
         if boolconfirmo == True:
             break
-    cv2.destroyWindow('fotos')
     menu2.destroy()
     objp = np.zeros((tamanhoTabuleiro[0] * tamanhoTabuleiro[1], 3), np.float32)
     objp[:,:2] = np.mgrid[0:tamanhoTabuleiro[0],0:tamanhoTabuleiro[1]].T.reshape(-1,2)
@@ -285,6 +275,9 @@ def creatMenu():
 
     global boolC1
     global boolfoto
+    global frameinicial
+    frame = frameinicial
+    
     cor1 = '#404040' # cinza de fundo
     cor2 = '#ff7f2a' #
     cor3 = '#757575'
@@ -292,7 +285,7 @@ def creatMenu():
     menu = Tk("menu")
     menu.option_add("*font", "lucida 10 bold italic")
     menu.title('Menu')
-    menu.geometry('860x440')
+    menu.geometry('1390x850')
     menu.config(bg = cor1)
     menu.iconbitmap('iconrasie.ico')
 
@@ -371,10 +364,10 @@ def creatMenu():
 
 
     #MOLDURA 3: BOTOES
-    botao1 = Button(moldura3,text='Camera',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = boolCamera1)
+    botao1 = Button(moldura3,text='Camera',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = creattreco)
     botao1.place(x=10,y=10)
 
-    botao2 = Button(moldura3,text='Mascara',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = boolCamera2)
+    botao2 = Button(moldura3,text='Mascara',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = creattreco)
     botao2.place(x=90,y=10)
 
     botao3 = Button(moldura3,text='Calibragem',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = creattreco)
@@ -397,18 +390,23 @@ def creatMenu():
     dados = [Px,Py,vx,vy]
 
     #FIM
+    imagem = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    tkimage = ImageTk.PhotoImage(image=imagem, master=menu)
+    l1 = Label(menu, image=tkimage)
+    l1.place(x = 20, y = 450)
 
-    return menu,hue,saturation,value,dados
+    l2 = Label(menu, image=tkimage)
+    l2.place(x = 700, y = 450)
+    return menu,hue,saturation,value,dados,l1,l2
 
 
 
-menu, hue,saturation,value,dados = creatMenu()
+menu, hue,saturation,value,dados,l1,l2 = creatMenu()
 while(True):
 
     ret, frame = cam.read() 
     tempo = time.time()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
-    
     minimo, maximo = zxc.getTrackBarHSV(hue,saturation,value)
 
     filtrado = cv2.inRange(hsv, minimo, maximo)
@@ -442,21 +440,15 @@ while(True):
         pular += 1  
     #print([vx,vy])
     #ate aki
-    if(boolc1):
-        cv2.imshow('camera',frame)
-    else:
-        try:
-            cv2.destroyWindow('camera')
-        except:
-            pass
+    feed = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) 
+    img_update = ImageTk.PhotoImage(Image.fromarray(feed))
+    l1.configure(image=img_update)
+    l1.update()
 
-    if(boolc2):
-        cv2.imshow('mascara',filtrado)
-    else:
-        try:
-            cv2.destroyWindow('mascara')
-        except:
-            pass
+    mascara = ImageTk.PhotoImage(Image.fromarray(filtrado))
+    l2.configure(image=mascara)
+    l2.update()
+
     dados[0].config(text="Px = {0}".format(centroX))
     dados[1].config(text="Py = {0}".format(centroY))
     dados[2].config(text="Vx = {0}".format(round(vx,1)))
