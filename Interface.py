@@ -1,7 +1,10 @@
 from tkinter import *
 import cv2
-boolc1 = False 
-
+import Bibliotecaresumida as zxc
+import pickle
+import time
+import numpy as np
+import imutils
 def boolCamera1():
     global boolc1
     if(boolc1):
@@ -9,8 +12,28 @@ def boolCamera1():
     else:
         boolc1 = True
 
+def boolCamera2():
+    global boolc2
+    if(boolc2):
+        boolc2 = False
+    else:
+        boolc2 = True
 
+# def boolCamera2():
+#     menu2 = creattreco()
+#     while(True):
+#         menu2.update()
+        
+def boolCamera3():
+    #global prop
+    zxc.takePictures()
+    propriedades = zxc.calibrateCam()
+def creattreco():
 
+    menu2 = Tk()
+    w = Label(menu2, text=vx)
+    w.pack()
+    return menu2
 def creatMenu():
 
     global boolC1
@@ -20,10 +43,14 @@ def creatMenu():
     
     menu = Tk()
     menu.option_add("*font", "lucida 10 bold italic")
-    menu.title('Home')
+    menu.title('Menu')
     menu.geometry('860x440')
     menu.config(bg = cor1)
-    #menu.iconbitmap('iconrasie.ico')
+    menu.iconbitmap('iconrasie.ico')
+
+    w = Label(menu, text=vx)
+    w.pack()
+
     moldura1 = LabelFrame(menu, text='Filtro De Cor',padx=1,pady=1,bg =cor1,fg = cor2, highlightbackground=cor2, highlightcolor=cor2)
     moldura1.place(x=20,y=20,height=400,width=400)
 
@@ -97,21 +124,86 @@ def creatMenu():
     #MOLDURA 3: BOTOES
     botao1 = Button(moldura3,text='Camera',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = boolCamera1)
     botao1.place(x=10,y=50)
+
+    botao2 = Button(moldura3,text='Mascara',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = boolCamera2)
+    botao2.place(x=90,y=50)
+
+    botao3 = Button(moldura3,text='Calibragem',bg =cor1,fg = cor2,activebackground = cor1,activeforeground = cor2,command = boolCamera3)
+    botao3.place(x=175,y=50)
     
     #FIM
 
-    return menu,hue,saturation,value,
+    return menu,hue,saturation,value
+
+boolc1 = False
+boolc2 = False
+boolc3 = False
+pular = 0
+vx = 0.0
+vy = 0.0
+infile = open('cameraconfig','rb')
+propriedades = pickle.load(infile)
+print(propriedades)
+infile.close
 
 
-
-menu, x,y,v  = creatMenu()
+menu, hue,saturation,value  = creatMenu()
 img = cv2.VideoCapture(0)
 while(True):
+    ret, frame = img.read()   
+    tempo = time.time()
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
     
+    minimo, maximo = zxc.getTrackBarHSV(hue,saturation,value)
+
+    filtrado = cv2.inRange(hsv, minimo, maximo)
+    filtrado = cv2.erode(filtrado, None, iterations=2) 
+    filtrado = cv2.dilate(filtrado, None, iterations=2)
+
+
+    #converter função
+    contornos = cv2.findContours(filtrado.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contornos = imutils.grab_contours(contornos)
+    centro = None
+    if len(contornos) > 0:
+        c = max(contornos, key=cv2.contourArea)
+        ((x,y), raio) = cv2.minEnclosingCircle(c)
+        m = cv2.moments(c)
+        centroX = int(m['m10']/m['m00'])
+        centroY = int(m['m01']/m['m00'])
+        nx = int(x)
+        ny = int(y)
+        nr = int(raio)
+        cv2.circle(frame, (nx,ny), nr, (0,0,255), 2)
+        cv2.circle(frame, (centroX,centroY), 5,(255,0,0),-1)
+
+        ## Calculo velocidade (Precisa converter pixels -> m/s) tem que manter dentro do if?
+        if(pular > 0):
+            vx = (centroX - cxAntigo) / (tempo - tempoAntigo)
+            vy = (centroY - cyAntigo) / (tempo - tempoAntigo)
+        tempoAntigo = tempo             
+        cxAntigo = centroX
+        cyAntigo = centroY
+        pular += 1  
+    print([vx,vy])
+    #ate aki
     if(boolc1):
-        ret, frame = img.read()
-        cv2.imshow('teste',frame)
+        cv2.imshow('camera',frame)
     else:
-        cv2.destroyAllWindows()
+        try:
+            cv2.destroyWindow('camera')
+        except:
+            pass
+
+    if(boolc2):
+        cv2.imshow('mascara',filtrado)
+    else:
+        try:
+            cv2.destroyWindow('mascara')
+        except:
+            pass
+    #if(boolc1 == False and boolc2 == False):
+        #cv2.destroyAllWindows()
     
     menu.update()
+    

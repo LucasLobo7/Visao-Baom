@@ -18,9 +18,9 @@ lastBallY = 255
 
 lastTime = 0
 
-with open('datacsv.txt', 'r') as arquivo:
-    leitor = csv.reader(arquivo)
-    dados = list(leitor)
+# with open('datacsv.txt', 'r') as arquivo:
+#     leitor = csv.reader(arquivo)
+#     dados = list(leitor)
 
 infile = open('cameraconfig','rb')
 propriedades = pickle.load(infile)
@@ -33,13 +33,12 @@ def dataAngles(fileName):
         
     return dados
 
-def getTrackBarHSV(menu,hue,saturation,value ):
+def getTrackBarHSV(hue,saturation,value):
 
     minimoHSV = np.array([hue[0].get(), saturation[0].get(), value[0].get()])
     maximoHSV = np.array([hue[1].get(), saturation[1].get(), value[1].get()])
 
     return minimoHSV,maximoHSV
-
 
 def getTrackBarPID(oKp,oKi,oKd):
     kp = oKp.get()
@@ -113,13 +112,6 @@ def calcVelocity(point, lastPoint, currentTime, lastTime):
 
     return vel, lastTime,lastPoint
 
-def getVisionSensor(clientID,visionSensor):
-    err, resolution, frame = sim.simxGetVisionSensorImage(clientID, visionSensor, 0, sim.simx_opmode_buffer)
-
-    frame = np.array(frame, dtype=np.uint8)
-    frame.resize(resolution[0],resolution[1],3)
-    
-    return frame
 
 def FilterVision(frame,minimoHSV,maximoHSV):
 
@@ -165,7 +157,6 @@ def contourBall(frame,filtrado):
     
     return frame
 
-
 def NumericalPID(Kp,Ki,Kd, setPoint, point, vel, dt):
     erro = setPoint - point
     Serro = 0
@@ -181,17 +172,16 @@ def searchAngles(alpha, beta):
     n = int( ((alpha/0.2)+1) + ( ((beta/0.2)+1)*(175)) )
     Angles = dados[n][2:4]  
 
-
 def takePictures():
     cam = cv2.VideoCapture(0)
-    cv2.namedWindow("calibragem")
+    cv2.namedWindow("fotos")
     contador = 0
     while True:
         ret, frame = cam.read()
         if ret == False:
             print("problema na camera")
             break
-        cv2.imshow("calibragem", frame)
+        cv2.imshow("fotos", frame)
 
         k = cv2.waitKey(1)
         if k%256 == 27:
@@ -203,7 +193,8 @@ def takePictures():
             cv2.imwrite(NomeImagem, frame)
             print("{} salvo!".format(NomeImagem))
             contador += 1
-
+    cv2.destroyWindow('fotos')
+    
 def calibrateCam():
     cam = cv2.VideoCapture(0)
     tamanhoTabuleiro = (12,7) # number of squares
