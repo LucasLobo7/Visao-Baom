@@ -18,7 +18,7 @@ from tkinter import *
 import glob
 import pickle
 from PIL import Image, ImageTk 
-
+import threading
 
 cor1 = '#404040' # cinza de fundo
 cor2 = '#ff7f2a' #
@@ -30,6 +30,15 @@ ret, frame = cam.read()
 boolfoto = False
 boolconfirmo = False
 boolrecuso = False
+
+
+def thread_fun():
+   ret, frameteste = cam.read() 
+   imagem = cv2.cvtColor(frameteste, cv2.COLOR_BGR2RGB)  
+   imagem = Image.fromarray(imagem)
+   tkimage = ImageTk.PhotoImage(imagem)
+   l1.config(image=tkimage)
+
 def boolfoto():
     global boolfoto
     boolfoto = not boolfoto
@@ -52,7 +61,9 @@ def cali():
     boolfoto = False
     boolrecuso = False
     boolconfirmo = False
+    
     while True:
+        thread_fun()
         ret, frame = cam.read()
         salvo = frame
         if ret == False:

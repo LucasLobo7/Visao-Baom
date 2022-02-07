@@ -1,6 +1,7 @@
 from tkinter import *
 import cv2
 from cv2 import destroyWindow
+#from cv2 import destroyWindow
 import Bibliotecaresumida as zxc
 import pickle
 import time
@@ -18,7 +19,15 @@ from tkinter import *
 import glob
 import pickle
 from PIL import Image, ImageTk 
+import threading
 
+def thread_fun(l1):
+    while(True):
+        ret, frameteste = cam.read() 
+        imagem = cv2.cvtColor(frameteste, cv2.COLOR_BGR2RGB)  
+        imagem = Image.fromarray(imagem)
+        tkimage = ImageTk.PhotoImage(imagem)
+        l1.config(image=tkimage)
 
 boolc1 = False
 boolc2 = False
@@ -136,6 +145,16 @@ def cali(menu2, l1,numero):
     return propriedades
     
 def creattreco():
+    try: 
+        cv2.destroyWindow("camera")
+    except:
+        pass
+    
+    try: 
+        cv2.destroyWindow("mascara")
+    except:
+        pass
+    menu.withdraw()
     global frameinicial
     global boolfoto
     global boolconfirmo
@@ -172,16 +191,24 @@ def creattreco():
     
     cv2.namedWindow("fotos")
     contador = 0
-
+    #threading.Thread(target=thread_fun(l1)).start()
     while True:
+        
         menu2.update()
+        if boolrecuso == True:
+            cv2.destroyWindow("fotos")
+            menu2.destroy()
+            menu.deiconify()
+            boolfoto = False
+            boolconfirmo = False
+            boolrecuso = False
+            break
         ret, frame = cam.read()
         salvo = frame
         if ret == False:
             print("problema na camera")
             break
         cv2.imshow("fotos", frame)
-        #print(boolfoto)
         tamanho = (frame.shape[0],frame.shape[1])
         #k = cv2.waitKey(1)
         #if k%256 == 27:
@@ -242,7 +269,11 @@ def creattreco():
     outfile = open('cameraconfig','wb')
     pickle.dump(propriedades,outfile)
     outfile.close
-
+    menu2.destroy()
+    menu.deiconify()
+    boolfoto = False
+    boolconfirmo = False
+    boolrecuso = False
     return menu2, l1,numero
 
         
