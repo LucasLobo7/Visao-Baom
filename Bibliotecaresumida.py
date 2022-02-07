@@ -21,10 +21,12 @@ lastTime = 0
 # with open('datacsv.txt', 'r') as arquivo:
 #     leitor = csv.reader(arquivo)
 #     dados = list(leitor)
-
-infile = open('cameraconfig','rb')
-propriedades = pickle.load(infile)
-infile.close
+try:
+    infile = open('cameraconfig','rb')
+    propriedades = pickle.load(infile)
+    infile.close
+except:
+    pass
 
 def dataAngles(fileName):
     with open(fileName, 'r') as arquivo:
