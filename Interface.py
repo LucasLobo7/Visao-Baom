@@ -21,16 +21,6 @@ import pickle
 from PIL import Image, ImageTk 
 import threading
 
-def thread_fun(l1):
-    while(True):
-        ret, frameteste = cam.read() 
-        imagem = cv2.cvtColor(frameteste, cv2.COLOR_BGR2RGB)  
-        imagem = Image.fromarray(imagem)
-        tkimage = ImageTk.PhotoImage(imagem)
-        l1.config(image=tkimage)
-
-boolc1 = False
-boolc2 = False
 boolc3 = False
 pular = 0
 vx = 0.0
@@ -59,83 +49,7 @@ def boolrecusoc():
     global boolrecuso
     boolrecuso = not boolrecuso
 
-def cali(menu2, l1,numero):
-    global cam 
-    cv2.namedWindow("fotos")
-    contador = 0
-    global boolfoto
-    global boolrecuso
-    global boolconfirmo
 
-    while True:
-        menu2.update()
-        ret, frame = cam.read()
-        salvo = frame
-        if ret == False:
-            print("problema na camera")
-            break
-        cv2.imshow("fotos", frame)
-        print(boolfoto)
-        tamanho = (frame.shape[0],frame.shape[1])
-        #k = cv2.waitKey(1)
-        #if k%256 == 27:
-            # ESC pressed
-            #break
-        if boolfoto  == True:
-            # SPACE pressed
-            NomeImagem = "calibra{}.png".format(contador)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            ret, vertice = cv2.findChessboardCorners(gray, tamanhoTabuleiro, None) # Find the chess board corners
-            if ret==0:
-                print('erro no tabuleiro')
-            else:
-                verticeNovo = cv2.cornerSubPix(gray, vertice, (11,11), (-1,-1), criteria)
-                desenhos = frame
-                cv2.imwrite(NomeImagem, salvo)
-                cv2.drawChessboardCorners(desenhos, tamanhoTabuleiro, verticeNovo, ret) # Draw corners
-                imagem = cv2.cvtColor(desenhos, cv2.COLOR_BGR2RGB) 
-                imagem = Image.fromarray(imagem)
-                tkimage = ImageTk.PhotoImage(imagem)
-                l1.config(image=tkimage)
-                menu2.update()
-                while(True):
-                    if boolconfirmo == True:
-                        print("{} salvo!".format(NomeImagem))
-                        contador += 1
-                        boolconfirmo = False
-                        numerofotos.config(text="Numero de imagens: {0}".format(contador))
-                        break
-                    if boolrecuso == True:
-                        os.remove(NomeImagem)
-                        boolrecuso = False
-                        break
-                    boolfoto = False
-                    menu2.update()
-        if boolconfirmo == True:
-            break
-    cv2.destroyWindow('fotos')
-    objp = np.zeros((tamanhoTabuleiro[0] * tamanhoTabuleiro[1], 3), np.float32)
-    objp[:,:2] = np.mgrid[0:tamanhoTabuleiro[0],0:tamanhoTabuleiro[1]].T.reshape(-1,2)
-    objetoReal = [] #points in real world space
-    objetoImagem = [] #points in image plane.
-    imagens = glob.glob('*.png')
-    for imagem in imagens:
-        img = cv2.imread(imagem)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        ret, vertice = cv2.findChessboardCorners(gray, tamanhoTabuleiro, None) # Find the chess board corners
-
-        if ret == True:
-            objetoReal.append(objp)
-            verticeNovo = cv2.cornerSubPix(gray, vertice, (11,11), (-1,-1), criteria)
-            objetoImagem.append(vertice)
-    ret, cameraMatrix, dist, rvecs, tvecs = cv2.calibrateCamera(objetoReal, objetoImagem, tamanho, None, None)
-    propriedades = [ret, cameraMatrix, dist, rvecs, tvecs]
-    outfile = open('cameraconfig','wb')
-    pickle.dump(propriedades,outfile)
-    outfile.close
-    return propriedades
-    
 def creattreco():
     try: 
         cv2.destroyWindow("camera")
